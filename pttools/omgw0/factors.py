@@ -1,10 +1,16 @@
-r"""Factors used in calculating $\Omega_{\text{gw},0}$."""
+r"""Factors used in calculating $\Omega_{\text{gw},0}$.
+
+The functions of this module accept also floats with an uncertainty of the uncertainties package
+and arrays of them, e.g. the constants with the suffix ``_U`` of :py:mod:`pttools.omgw0.const`,
+and propagate the uncertainties to the result.
+"""
 
 import math
 import typing as tp
 
 import numpy as np
 
+from pttools.math.uncertainties import sqrt_u
 from pttools.omgw0.const import (
     DEFAULT_G_STAR,
     DEFAULT_T_STAR,
@@ -18,12 +24,12 @@ from pttools.omgw0.const import (
     G,
     c,
 )
-from pttools.type_hints import FloatOrArr
+from pttools.type_hints import FloatOrArrU
 
 __all__ = ["H_FACTOR", "H_FACTOR_SI", "H_SI", "F_gw0_h2", "H", "a_ratio", "e_SI"]
 
 
-def a_ratio[T: FloatOrArr](
+def a_ratio[T: FloatOrArrU](
         T_star: T = DEFAULT_T_STAR,
         T0: T = T_CMB,
         gs_star: T = DEFAULT_G_STAR,
@@ -40,7 +46,7 @@ def a_ratio[T: FloatOrArr](
     return tp.cast(T, K_B * T0 / (T_star * GEV_IN_J) * (gs0 / gs_star)**(1/3))
 
 
-def e_SI[T2: FloatOrArr](T: T2, ge: T2) -> T2:
+def e_SI[T2: FloatOrArrU](T: T2, ge: T2) -> T2:
     r"""Energy density $e$ in SI units $\frac{\text{J}}{\text{m}^3}$.
 
     :param T: $T$, temperature in GeV
@@ -52,7 +58,7 @@ def e_SI[T2: FloatOrArr](T: T2, ge: T2) -> T2:
     return tp.cast(T2, np.pi**2 / 30 * ge * kT**4 / (H_BAR_C ** 3))
 
 
-def F_gw0_h2[T: FloatOrArr](
+def F_gw0_h2[T: FloatOrArrU](
         ge_star: T,
         gs_star: T | float | None = None,
         ge0_photon: T | float = GE0_PHOTON,
@@ -108,7 +114,7 @@ H_FACTOR: float = math.sqrt(8 * math.pi / 3)
 H_FACTOR_SI: float = H_FACTOR * math.sqrt(G) / c
 
 
-def H[T: FloatOrArr](e: T, G: float = 1.) -> T:
+def H[T: FloatOrArrU](e: T, G: T | float = 1.) -> T:
     r"""Hubble rate without unit conversion.
 
     $$H = \sqrt{\frac{8 \pi G e}{3}}$$
@@ -119,15 +125,18 @@ def H[T: FloatOrArr](e: T, G: float = 1.) -> T:
         The default of 1 corresponds to the natural units where $G = 1 / m_{\text{pl}}^2 = 1$.
     :return: Hubble rate
     """
-    return tp.cast(T, H_FACTOR * np.sqrt(G * e))
+    return tp.cast(T, H_FACTOR * sqrt_u(G * e))
 
 
-def H_SI[T: FloatOrArr](e: T) -> T:
+def H_SI[T: FloatOrArrU](e: T, G: T | float = G) -> T:
     r"""Hubble rate $H$ in SI units of $\frac{1}{\text{s}}$.
 
     $$H = \sqrt{\frac{8 \pi G e}{3 c^2}}$$
 
     :param e: $e$, energy density in SI units $\frac{\text{J}}{\text{m}^3}$
+    :param G: $G$, gravitational constant in SI units $\frac{\text{m}^3}{\text{kg s}^2}$.
+        Give :py:data:`pttools.omgw0.const.G_U` to propagate its uncertainty.
     :return: $H$, Hubble rate in SI units of $\frac{1}{\text{s}}$
     """
-    return tp.cast(T, H_FACTOR_SI * np.sqrt(e))
+    # With a float G, the factor in front of the square root of e equals H_FACTOR_SI exactly.
+    return tp.cast(T, H_FACTOR * sqrt_u(G) / c * sqrt_u(e))

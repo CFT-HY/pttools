@@ -1799,6 +1799,7 @@ dependencies = [
     { name = "plotly" },
     { name = "scipy" },
     { name = "tabulate" },
+    { name = "uncertainties" },
 ]
 
 [package.optional-dependencies]
@@ -1874,8 +1875,9 @@ requires-dist = [
     { name = "tbb", marker = "platform_machine == 'x86_64' and sys_platform == 'darwin' and extra == 'performance'", specifier = ">=2021.10.0,<2021.11" },
     { name = "tbb", marker = "(platform_machine == 'AMD64' and sys_platform != 'darwin' and extra == 'performance') or (platform_machine == 'x86_64' and sys_platform != 'darwin' and extra == 'performance')", specifier = ">=2021.6.0" },
     { name = "tbb4u", marker = "(platform_machine == 'ARM64' and extra == 'performance') or (platform_machine == 'aarch64' and extra == 'performance') or (platform_machine == 'arm64' and extra == 'performance')", specifier = ">=2023.1.0" },
+    { name = "uncertainties", specifier = ">=3.2.3" },
 ]
-provides-extras = ["numbalsoda", "performance", "dashboard"]
+provides-extras = ["dashboard", "numbalsoda", "performance"]
 
 [package.metadata.requires-dev]
 dev = [
@@ -2879,6 +2881,15 @@ version = "1.1.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "tcmlib" },
+]
+
+[[package]]
+name = "uncertainties"
+version = "3.2.3"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/fe/0c/cb09f33b26955399c675ab378e4063ed7e48422d3d49f96219ab0be5eba9/uncertainties-3.2.3.tar.gz", hash = "sha256:76a5653e686f617a42922d546a239e9efce72e6b35411b7750a1d12dcba03031", size = 160492, upload-time = "2025-04-21T19:58:28.63Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/8f/5e/f1e1dd319e35e962a4e00b33150a8868b6329cc1d19fd533436ba5488f09/uncertainties-3.2.3-py3-none-any.whl", hash = "sha256:313353900d8f88b283c9bad81e7d2b2d3d4bcc330cbace35403faaed7e78890a", size = 60118, upload-time = "2025-04-21T19:58:26.864Z" },
 ]
 
 [[package]]

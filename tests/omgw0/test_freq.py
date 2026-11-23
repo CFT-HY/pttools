@@ -7,8 +7,10 @@ import unittest
 import numpy as np
 import pytest
 from scipy import constants
+from uncertainties import ufloat, unumpy
 
 from pttools.omgw0 import const, freq
+from pttools.type_hints import UFloat, UFloatArr1D
 
 
 def f_star0_exact(T_star: float, ge_star: float, gs_star: float) -> float:
@@ -82,6 +84,34 @@ class FStar0Test(unittest.TestCase):
             rtol=RTOL_CONSTANTS
         )
 
+    def test_uncertainty(self) -> None:
+        r"""Test that the uncertainties of $T_0$ and $G$ propagate to $f_{\ast,0} \propto T_0 \sqrt{G}$ and $f$."""
+        result: UFloat = freq.f_star0(T_star=100., ge_star=100., T0=const.T_CMB_U, G=const.G_U)
+        assert result.nominal_value == freq.f_star0(T_star=100., ge_star=100.)
+        rel = math.hypot(const.T_CMB_U.std_dev / const.T_CMB, const.G_U.std_dev / const.G / 2)
+        assert result.std_dev / result.nominal_value == pytest.approx(rel, rel=1e-12)
+        f: UFloat = freq.f(z=10., r_star=0.1, f_star0=result)
+        assert f.std_dev / f.nominal_value == pytest.approx(rel, rel=1e-12)
+        z: UFloat = freq.z(f=f, r_star=0.1, f_star0=result)
+        assert z.std_dev == pytest.approx(0, abs=1e-12)
+
+    def test_uncertainty_array(self) -> None:
+        r"""Test that $f_{\ast,0}$ can be computed for arrays of floats with uncertainties."""
+        T_star, ge_star, gs_star = (np.array(param) for param in zip(*self.PARAMS, strict=True))
+        T_star_u = unumpy.uarray(T_star, 0.01 * T_star)
+        result: UFloatArr1D = freq.f_star0(T_star_u, ge_star, gs_star, T0=const.T_CMB_U, G=const.G_U)
+        assert result.dtype == object
+        np.testing.assert_array_equal(unumpy.nominal_values(result), freq.f_star0(T_star, ge_star, gs_star))
+        # f_star0 is proportional to T_star.
+        rel = np.sqrt(
+            0.01**2 + (const.T_CMB_U.std_dev / const.T_CMB)**2 + (const.G_U.std_dev / const.G / 2)**2)
+        np.testing.assert_allclose(unumpy.std_devs(result) / unumpy.nominal_values(result), rel, rtol=1e-12)
+        # The elements with the same T_0 and G are correlated, so that the uncertainty cancels out in their ratio.
+        ratio: UFloat = result[0] / result[0]
+        assert ratio.std_dev == 0
+        f: UFloatArr1D = freq.f(z=np.array([1., 10.]), r_star=0.1, f_star0=result[0])
+        np.testing.assert_allclose(unumpy.std_devs(f) / unumpy.nominal_values(f), rel, rtol=1e-12)
+
     def test_literature_form(self) -> None:
         r"""Test that $f_{\ast,0}$ reduces to the form with $\left( \frac{g_{\ast}}{100} \right)^\frac{1}{6}$."""
         T_star = np.array([0.1, 100., 1e4])
@@ -141,6 +171,17 @@ class ZRangeTest(unittest.TestCase):
         assert min(f_maxs) >= self.F_MAX * (1 - 1e-14)
         assert max(f_mins) == pytest.approx(self.F_MIN, rel=1e-14)
         assert min(f_maxs) == pytest.approx(self.F_MAX, rel=1e-14)
+
+    def test_uncertainty(self) -> None:
+        """For floats with uncertainties, the range should be that of their nominal values."""
+        T_star = np.array([0.15, 100., 1000.])
+        r_star = np.array([0.01, 0.3, 0.1])
+        assert freq.z_range(
+            self.F_MIN, self.F_MAX,
+            T_star=unumpy.uarray(T_star, 0.1 * T_star), r_star=r_star,
+            ge_star=ufloat(100., 1.), gs_star=unumpy.uarray([90., 100., 106.75], 1.)
+        ) == freq.z_range(
+            self.F_MIN, self.F_MAX, T_star=T_star, r_star=r_star, ge_star=100., gs_star=np.array([90., 100., 106.75]))
 
     def test_arrays_and_scalars(self) -> None:
         """An array of length one should give the same range as the corresponding scalar."""

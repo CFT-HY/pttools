@@ -82,14 +82,18 @@ __all__ = [
     "FloatArr",
     "FloatArr1D",
     "FloatArr1DOrList",
+    "FloatArr1DU",
     "FloatArr2D",
     "FloatArr3D",
     "FloatArr4D",
     "FloatArrShaped",
+    "FloatArrU",
     "FloatOrArr",
     "FloatOrArr1D",
     "FloatOrArr1D2D",
+    "FloatOrArr1DU",
     "FloatOrArrNumba",
+    "FloatOrArrU",
     "Int",
     "IntArr1D",
     "IntArr2D",
@@ -102,6 +106,11 @@ __all__ = [
     "Shape2D",
     "Shape3D",
     "Shape4D",
+    "UFloat",
+    "UFloatArr",
+    "UFloatArr1D",
+    "UFloatOrArr",
+    "UFloatOrArr1D",
     "VWXi",
 ]
 
@@ -119,7 +128,7 @@ IS_DOCS: bool = "sphinx" in sys.modules
 TYPE_CHECKING_OR_DOCS: bool = tp.TYPE_CHECKING or IS_DOCS
 
 # These are used only in the type aliases, which are evaluated lazily,
-# and therefore importing the type hints does not import Matplotlib, Numba, NumPy and SciPy.
+# and therefore importing the type hints does not import Matplotlib, Numba, NumPy, SciPy and uncertainties.
 if TYPE_CHECKING_OR_DOCS:
     from matplotlib.axes import Axes
     from matplotlib.figure import Figure
@@ -127,9 +136,24 @@ if TYPE_CHECKING_OR_DOCS:
     import numpy as np
     from numpy.typing import NDArray
     from scipy.integrate import OdeSolver
+    import uncertainties
 
 # This adds quite a bit of startup time when only the type hints are needed, and not the rest of PTtools.
 # from pttools.speedup.numba_wrapper import CPUDispatcher
+
+# -----
+# Uncertainties
+# -----
+# This cannot be inside the block above, as UFloat is needed also at runtime,
+# e.g. for the annotations of the constants of pttools.omgw0.const.
+if tp.TYPE_CHECKING:
+    # The uncertainties package creates the arithmetic operators of its floats dynamically,
+    # and therefore the type checker would consider all arithmetic with them to be unsupported.
+    type UFloat = tp.Any
+else:
+    #: Float with an uncertainty of the uncertainties package,
+    #: e.g. the constants with the suffix ``_U`` of :py:mod:`pttools.omgw0.const`
+    type UFloat = uncertainties.UFloat
 
 # -----
 # Array shapes
@@ -190,6 +214,24 @@ type FloatOrArr1D = float | FloatArr1D
 type FloatOrArr1D2D = FloatOrArr1D | FloatArr2D
 #: The return type of Numba function that returns a float or a Numpy array
 type FloatOrArrNumba = float | FloatArr | NumbaFunc
+# Arrays of floats with uncertainties are object arrays.
+# As for the arrays of Matplotlib objects above, declaring the element type gives the correct types when indexed.
+#: Numpy array of floats with uncertainties, see :py:data:`UFloat`
+type UFloatArr = NDArray[UFloat]
+#: 1D Numpy array of floats with uncertainties, see :py:data:`UFloat`
+type UFloatArr1D = np.ndarray[Shape1D, np.dtype[UFloat]]
+#: Float with an uncertainty or a Numpy array of them
+type UFloatOrArr = UFloat | UFloatArr
+#: Float with an uncertainty or a 1D Numpy array of them
+type UFloatOrArr1D = UFloat | UFloatArr1D
+#: Numpy array of floats, or of floats with uncertainties
+type FloatArrU = FloatArr | UFloatArr
+#: 1D Numpy array of floats, or of floats with uncertainties
+type FloatArr1DU = FloatArr1D | UFloatArr1D
+#: Float or a float with an uncertainty, or a Numpy array of either of them
+type FloatOrArrU = float | UFloatOrArr | FloatArr
+#: Float or a float with an uncertainty, or a 1D Numpy array of either of them
+type FloatOrArr1DU = float | UFloatOrArr1D | FloatArr1D
 #: Integer or a Numpy array of integers
 type Int = np.dtype[np.int_]
 type IntArr1D = np.ndarray[Shape1D, Int]

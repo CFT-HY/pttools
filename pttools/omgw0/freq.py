@@ -1,18 +1,24 @@
-r"""Frequency conversion functions for $\Omega_{\text{gw},0}$."""
+r"""Frequency conversion functions for $\Omega_{\text{gw},0}$.
+
+The functions of this module accept also floats with an uncertainty of the uncertainties package
+and arrays of them, e.g. the constants with the suffix ``_U`` of :py:mod:`pttools.omgw0.const`,
+and propagate the uncertainties to the result, except :py:func:`z_range`, which uses only their nominal values.
+"""
 
 import typing as tp
 
 import numpy as np
+from uncertainties import unumpy
 
-from pttools.omgw0.const import DEFAULT_G_STAR, DEFAULT_T_STAR, GS0, T_CMB
+from pttools.omgw0.const import DEFAULT_G_STAR, DEFAULT_T_STAR, GS0, T_CMB, G
 from pttools.omgw0.factors import H_SI, a_ratio, e_SI
 from pttools.ssm.const import DEFAULT_R_STAR
-from pttools.type_hints import FloatOrArr, FloatOrArr1D
+from pttools.type_hints import FloatOrArr1DU, FloatOrArrU
 
 __all__ = ["f", "f0", "f_star0", "z", "z_full", "z_range"]
 
 
-def f[T: FloatOrArr](z: T, r_star: T | float, f_star0: T | float) -> T:
+def f[T: FloatOrArrU](z: T, r_star: T | float, f_star0: T | float) -> T:
     r"""Convert the dimensionless wavenumber $z$ to frequency today by taking into account the redshift.
 
     $$f = \frac{z}{{r}_\ast} f_{\ast,0}$$,
@@ -27,7 +33,7 @@ def f[T: FloatOrArr](z: T, r_star: T | float, f_star0: T | float) -> T:
     return z / r_star * f_star0  # pyrefly: ignore[bad-return]
 
 
-def f0[T: FloatOrArr](
+def f0[T: FloatOrArrU](
         r_star: T,
         T_star: T | float = DEFAULT_T_STAR,
         ge_star: T | float = DEFAULT_G_STAR,
@@ -46,12 +52,13 @@ def f0[T: FloatOrArr](
     return f_star0(T_star=T_star, ge_star=ge_star, gs_star=gs_star) / r_star  # pyrefly: ignore[bad-return]
 
 
-def f_star0[T: FloatOrArr](
+def f_star0[T: FloatOrArrU](
         T_star: T,
         ge_star: T | float = DEFAULT_G_STAR,
         gs_star: T | float | None = None,
-        gs0: float = GS0,
-        T0: float = T_CMB) -> T:
+        gs0: T | float = GS0,
+        T0: T | float = T_CMB,
+        G: T | float = G) -> T:
     r"""$f_{\ast,0}$, conversion factor from frequencies in units of $H_\ast$ at GW production to frequencies today.
 
     $$f_{\ast,0} = \frac{H_{\ast}}{2\pi} \frac{a_{\ast}}{a_{0}}$$
@@ -92,17 +99,20 @@ def f_star0[T: FloatOrArr](
     :param gs_star: $g_{s\ast}$, degrees of freedom for entropy at the time of GW production.
         If not given, $g_{s\ast} = g_{e\ast}$ is assumed.
     :param gs0: $g_{s0}$, degrees of freedom for entropy today
-    :param T0: $T_0$, temperature of the CMB today in K
+    :param T0: $T_0$, temperature of the CMB today in K.
+        Give :py:data:`pttools.omgw0.const.T_CMB_U` to propagate its uncertainty.
+    :param G: $G$, gravitational constant in SI units $\frac{\text{m}^3}{\text{kg s}^2}$.
+        Give :py:data:`pttools.omgw0.const.G_U` to propagate its uncertainty.
     :return: $f_{\ast,0}$ in Hz
     """
     if gs_star is None:
         gs_star = ge_star
     return tp.cast(T,
-        H_SI(e=e_SI(T=T_star, ge=ge_star)) / (2 * np.pi) * a_ratio(T_star=T_star, T0=T0, gs_star=gs_star, gs0=gs0)
+        H_SI(e=e_SI(T=T_star, ge=ge_star), G=G) / (2 * np.pi) * a_ratio(T_star=T_star, T0=T0, gs_star=gs_star, gs0=gs0)
     )
 
 
-def z[T: FloatOrArr](f: T, r_star: T | float, f_star0: T | float) -> T:
+def z[T: FloatOrArrU](f: T, r_star: T | float, f_star0: T | float) -> T:
     r"""Convert from frequencies $f$ today back to wavenumbers $z$.
 
     $$z(f) = \frac{f}{f_{\ast,0}} {r}_\ast$$
@@ -118,7 +128,7 @@ def z[T: FloatOrArr](f: T, r_star: T | float, f_star0: T | float) -> T:
     return f / f_star0 * r_star  # pyrefly: ignore[bad-return]
 
 
-def z_full[T: FloatOrArr](
+def z_full[T: FloatOrArrU](
         f: T,
         T_star: T | float = DEFAULT_T_STAR,
         r_star: T | float = DEFAULT_R_STAR,
@@ -144,10 +154,10 @@ def z_full[T: FloatOrArr](
 def z_range(
         f_min: float,
         f_max: float,
-        T_star: FloatOrArr1D = DEFAULT_T_STAR,
-        r_star: FloatOrArr1D = DEFAULT_R_STAR,
-        ge_star: FloatOrArr1D = DEFAULT_G_STAR,
-        gs_star: FloatOrArr1D | None = None) -> tuple[float, float]:
+        T_star: FloatOrArr1DU = DEFAULT_T_STAR,
+        r_star: FloatOrArr1DU = DEFAULT_R_STAR,
+        ge_star: FloatOrArr1DU = DEFAULT_G_STAR,
+        gs_star: FloatOrArr1DU | None = None) -> tuple[float, float]:
     r"""Range of wavenumbers $z$ that covers the frequencies from ${f}_\text{min}$ to ${f}_\text{max}$ today.
 
     The range covers the frequencies for all the given combinations of
@@ -161,6 +171,8 @@ def z_range(
 
     This can be used to create a common $z$ array for spectra with different parameters,
     e.g. for :py:meth:`pttools.omgw0.spectrum.Spectrum.with_params`.
+    For the floats with uncertainties, only their nominal values are used,
+    as the range is used for creating a grid of $z$ values.
 
     :param f_min: ${f}_\text{min}$, minimum frequency today (Hz)
     :param f_max: ${f}_\text{max}$, maximum frequency today (Hz)
@@ -175,6 +187,9 @@ def z_range(
     if not 0 < f_min <= f_max:
         raise ValueError(f"0 < f_min <= f_max is required. Got f_min={f_min}, f_max={f_max}.")
 
+    T_star, r_star, ge_star = (unumpy.nominal_values(x) for x in (T_star, r_star, ge_star))
+    if gs_star is not None:
+        gs_star = unumpy.nominal_values(gs_star)
     f_star0_val = f_star0(T_star=T_star, ge_star=ge_star, gs_star=gs_star)
     z_min = np.min(z(f=f_min, r_star=r_star, f_star0=f_star0_val))
     z_max = np.max(z(f=f_max, r_star=r_star, f_star0=f_star0_val))

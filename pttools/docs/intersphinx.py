@@ -17,5 +17,6 @@ INTERSPHINX_MAPPING: IntersphinxMapping = {
     "pytest": ("https://docs.pytest.org/en/stable/", None),
     "scipy": ("https://docs.scipy.org/doc/scipy/", None),
     "sympy": ("https://docs.sympy.org/latest/", None),
+    "uncertainties": ("https://uncertainties.readthedocs.io/en/latest/", None),
     # "yappi": ("https://yappi.readthedocs.io/en/latest/", None),
 }

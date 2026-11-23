@@ -3,12 +3,12 @@
 import typing as tp
 
 from pttools.omgw0.const import GE0_PHOTON, GS0_PHOTON, N_NU
-from pttools.type_hints import FloatOrArr
+from pttools.type_hints import FloatOrArrU
 
 __all__ = ["ge0", "gs0"]
 
 
-def ge0[T: FloatOrArr](ge0_photon: T = GE0_PHOTON, n_nu: T | float = N_NU) -> T:
+def ge0[T: FloatOrArrU](ge0_photon: T = GE0_PHOTON, n_nu: T | float = N_NU) -> T:
     r"""$g_{e0}$, the degrees of freedom for energy density today.
 
     $$g_{e0} = 2 + \frac{7}{8} \cdot 2 N_{\nu} \cdot \left( \frac{4}{11} \right)^\frac{4}{3}$$
@@ -16,7 +16,7 @@ def ge0[T: FloatOrArr](ge0_photon: T = GE0_PHOTON, n_nu: T | float = N_NU) -> T:
     return tp.cast(T, ge0_photon + 7 / 8 * 2 * n_nu * (4 / 11)**(4/3))
 
 
-def gs0[T: FloatOrArr](gs0_photon: T = GS0_PHOTON, n_nu: T | float = N_NU) -> T:
+def gs0[T: FloatOrArrU](gs0_photon: T = GS0_PHOTON, n_nu: T | float = N_NU) -> T:
     r"""$g_{s0}$, the degrees of freedom for entropy today.
 
     $$g_{s0} = g_0 + \frac{7}{8} \cdot 2 N_{\nu} \cdot \frac{4}{11} \approx 3.91$$

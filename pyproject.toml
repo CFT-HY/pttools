@@ -96,6 +96,8 @@ dependencies = [
     "scipy >= 1.17.1",
     # For formatting pandas DataFrames as Markdown tables
     "tabulate >= 0.10.0",
+    # For the uncertainties of the physical constants in pttools.omgw0.const
+    "uncertainties >= 3.2.3",
 ]
 
 [project.optional-dependencies]
