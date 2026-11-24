@@ -16,6 +16,9 @@
     All checks are run even if some of them fail. The exit code is 0 if all checks pass,
     the exit code of the failed check if exactly one check fails, and 100 if multiple checks fail.
   - Fast lint: `./lint.sh --fast` skips the significantly slower `python -m pttools.docs.lint`.
+  - Nitpicky lint: `./lint.sh --nitpicky` runs the documentation lint with the `--nitpicky` option of Sphinx,
+    which warns about all the references whose target is not found. Without it, such references are silently rendered without a link.
+    It's not enabled by default, as there are many such references.
   - Git pre-commit hooks run the checks of the fast lint in parallel on the staged changes, and block the commit if any of them fails.
     They also run the built-in hooks of prek, which fix trailing whitespace, missing newlines at the end of files and mixed line endings,
     check the syntax of JSON, TOML and YAML files, and check for large files and for the consistency of shebangs and executable bits.

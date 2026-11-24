@@ -13,13 +13,17 @@ MULTIPLE_FAILED=100
 
 usage() {
   cat <<EOF
-Usage: $0 [-f|--fast] [-h|--help]
+Usage: $0 [-f|--fast] [-n|--nitpicky] [-h|--help]
 
 Run pyrefly check, pyrefly coverage check, ruff check and the documentation lint (pttools.docs.lint).
 
 Options:
-  -f, --fast  Skip the documentation lint, which is significantly slower than the other checks.
-  -h, --help  Show this help.
+  -f, --fast      Skip the documentation lint, which is significantly slower than the other checks.
+  -n, --nitpicky  Run the documentation lint with the --nitpicky option of Sphinx,
+                  which warns about all the references whose target is not found.
+                  As the documentation is built with --fail-on-warning, these warnings fail the lint.
+                  Without this option, such references are rendered as plain text without a link.
+  -h, --help      Show this help.
 
 Exit code: 0 if all checks pass, the exit code of the failed check if exactly one check fails,
 and ${MULTIPLE_FAILED} if multiple checks fail.
@@ -27,9 +31,11 @@ EOF
 }
 
 FAST=false
+NITPICKY=false
 for arg in "$@"; do
   case "${arg}" in
     -f|--fast) FAST=true ;;
+    -n|--nitpicky) NITPICKY=true ;;
     -h|--help) usage; exit 0 ;;
     *) echo "Unknown argument: ${arg}" >&2; usage >&2; exit 64 ;;
   esac
@@ -57,7 +63,12 @@ run uv run pyrefly check
 run uv run pyrefly coverage check
 run uv run ruff check
 if [ "${FAST}" = false ]; then
-  run uv run python -m pttools.docs.lint
+  if [ "${NITPICKY}" = true ]; then
+    # docs/Makefile gives the variable O to sphinx-build, and pttools.docs.lint keeps the O of the environment.
+    O="${O:+${O} }--nitpicky" run uv run python -m pttools.docs.lint
+  else
+    run uv run python -m pttools.docs.lint
+  fi
 fi
 
 if [ "${#FAILED[@]}" -eq 0 ]; then
