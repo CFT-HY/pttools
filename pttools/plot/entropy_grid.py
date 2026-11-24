@@ -14,7 +14,7 @@ import numpy as np
 from pttools.analysis.bubble_grid import BubbleGridVWAlpha
 from pttools.plot.colormap import cmap_plusminus
 from pttools.plot.utils import create_fig_ax, save_fig
-from pttools.plot.vw_alpha import VwAlphaPlot
+from pttools.plot.vw_alpha_bubble import VwAlphaBubblePlot
 import pttools.type_hints as th
 from pttools.utils.decorators import post_func
 
@@ -42,7 +42,7 @@ __all__ = [
 logger: logging.Logger = logging.getLogger(__name__)
 
 
-class DurationPlot(VwAlphaPlot):
+class DurationPlot(VwAlphaBubblePlot):
     """Plot the time it took to simulate each bubble."""
 
     def __init__(self, grid: BubbleGridVWAlpha, fig: Figure | None = None, ax: Axes | None = None):
@@ -64,7 +64,7 @@ class DurationPlot(VwAlphaPlot):
         self.ax.set_title(f"Time elapsed for {grid.model.label_latex}")
 
 
-class EntropyPlot(VwAlphaPlot):
+class EntropyPlot(VwAlphaBubblePlot):
     """Plot the entropy of bubbles as a contour plot."""
 
     def __init__(
@@ -101,7 +101,7 @@ class EntropyPlot(VwAlphaPlot):
         self.chapman_jouguet()
 
 
-class DeltaEntropyPlot(VwAlphaPlot):
+class DeltaEntropyPlot(VwAlphaBubblePlot):
     """Plot the relative difference of two entropy values as a contour plot."""
 
     def __init__(
@@ -133,7 +133,7 @@ class DeltaEntropyPlot(VwAlphaPlot):
         cbar.ax.set_ylabel(title)
 
 
-class EntropyConservationPlot(VwAlphaPlot):
+class EntropyConservationPlot(VwAlphaBubblePlot):
     """Plot the entropy generation at the wall."""
 
     def __init__(
@@ -164,7 +164,7 @@ class EntropyConservationPlot(VwAlphaPlot):
         self.ax.legend()
 
 
-class GieseApproximationPlot(VwAlphaPlot):
+class GieseApproximationPlot(VwAlphaBubblePlot):
     r"""Plot the Giese et al. approximation vs. simulated value for $\frac{\tilde{v}_+}{\tilde{v}_-}$."""
 
     def __init__(
@@ -197,7 +197,7 @@ class GieseApproximationPlot(VwAlphaPlot):
         self.ax.legend()
 
 
-class KappaOmegaSumPlot(VwAlphaPlot):
+class KappaOmegaSumPlot(VwAlphaBubblePlot):
     r"""Plot $\kappa$ + $\omega$ of bubbles as a contour plot."""
 
     def __init__(self, grid: BubbleGridVWAlpha, fig: Figure | None = None, ax: Axes | None = None):

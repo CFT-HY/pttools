@@ -17,8 +17,10 @@ from .models import *
 from .plotly import *
 from .spectra import *
 from .suppression import *
+from .suppression_comparison import *
 from .thermomodels import *
 from .threads import *
 from .utils import *
 from .vw_alpha import *
+from .vw_alpha_bubble import *
 from .xiv_plane import *

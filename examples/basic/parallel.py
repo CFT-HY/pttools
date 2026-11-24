@@ -11,13 +11,13 @@ from examples.utils import save_and_show_fig
 from pttools.analysis import BubbleGridVWAlpha
 from pttools.bubble import get_kappa_omega
 from pttools.models import BagModel
-from pttools.plot import VwAlphaPlot
+from pttools.plot import VwAlphaBubblePlot
 from pttools.utils import testing
 from pttools.utils.time import log_duration
 
 
 @log_duration
-def main() -> VwAlphaPlot:
+def main() -> VwAlphaBubblePlot:
     """Minimal example of parallel bubble solving"""
     n = 10 if testing() else 20
     # Create the arrays of v_wall and alpha_n points that will be used for the grid
@@ -33,7 +33,7 @@ def main() -> VwAlphaPlot:
     # omegas = grid.data[1]
 
     # Plotting
-    plot = VwAlphaPlot(grid)
+    plot = VwAlphaBubblePlot(grid)
     plot.contourf_plusminus(kappas, label=r"$\kappa$")
     plot.chapman_jouguet()
     return plot
