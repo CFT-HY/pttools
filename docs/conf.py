@@ -123,6 +123,12 @@ suppress_warnings = [
     "autosectionlabel.*",
 ]
 
+# References whose target is not found, which are ignored in the nitpicky mode (./lint.sh --nitpicky).
+nitpick_ignore_regex = [
+    # yappi has no Sphinx documentation, see pttools.docs.intersphinx.
+    ("py:.*", r"yappi\..*"),
+]
+
 
 # -- Options for HTML output -------------------------------------------------
 
