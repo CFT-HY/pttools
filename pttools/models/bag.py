@@ -151,7 +151,8 @@ class BagModel(AnalyticModel):
         $$\alpha_n = \frac{4 (V_s - V_b)}{3 w_n}$$
         decreases with $w_n$, since $\theta = V$ in both phases of the bag model.
         Therefore, the maximum is at $w_{\text{min}}$.
-        The parameters and the return value are those of :py:meth:`Model.alpha_n_max_find`.
+        The parameters and the return value are those of
+        :py:meth:`Model.alpha_n_max_find <pttools.models.model.Model.alpha_n_max_find>`.
         """
         if w_min is None:
             w_min = self.w_min
@@ -267,7 +268,8 @@ class BagModel(AnalyticModel):
         Note that :giese_2020:`\ ` p. 6 is using a different convention.
 
         The parameters are not used, as the critical temperature is computed analytically.
-        They are present only for compatibility with :meth:`Model.critical_temp`.
+        They are present only for compatibility with
+        :meth:`Model.critical_temp <pttools.models.model.Model.critical_temp>`.
         """
         return ((self.V_s - self.V_b) / (self.a_s - self.a_b))**0.25
 

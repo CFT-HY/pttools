@@ -423,7 +423,8 @@ def va_enthalpy_density(eqp_bar: float) -> float:
     This follows from the thermal energy density being $e - \theta = \frac{3}{4} w$,
     where $\theta = \frac{1}{4}(e - 3p)$ is the trace anomaly.
     As $\bar{e}_Q'$ is averaged over the volume within the shock,
-    this is equal to :py:func:`w_bar` up to the numerical accuracy of the integrals, see :py:func:`w_bar_energy`.
+    this is equal to :py:func:`w_bar` up to the numerical accuracy of the integrals, see
+    :py:func:`~pttools.bubble.thermo.w_bar_energy`.
 
     :param eqp_bar: $\bar{e}_Q'$, average thermal energy density after the phase transition,
         see :py:func:`thermal_energy_density`
@@ -482,13 +483,15 @@ def va_kinetic_energy_fraction(ek_va: float, eb: float) -> float:
     r"""$K_\text{va}$, volume-averaged kinetic energy fraction.
 
     $$K_\text{va} = \frac{{e}_K}{\bar{e}}$$
-    :gw_pt_ssm:`\ ` eq. B.31, where ${e}_K$ is the volume integral of :py:func:`va_kinetic_energy_density`.
+    :gw_pt_ssm:`\ ` eq. B.31, where ${e}_K$ is the volume integral of
+    :py:func:`~pttools.bubble.thermo.va_kinetic_energy_density`.
     It's therefore not an average fraction, but $\frac{4\pi}{3} {v}_\text{wall}^3$ times
     the bubble volume averaged kinetic energy fraction :py:func:`kinetic_energy_fraction`,
     which is the one that is consistent with :py:func:`ubarf2` and $K = \Gamma \bar{U}_f^2$
     (:gw_pt_ssm:`\ ` eq. B.30, B.32).
 
-    :param ek_va: ${e}_K$, volume-averaged kinetic energy density, see :py:func:`va_kinetic_energy_density`
+    :param ek_va: ${e}_K$, volume-averaged kinetic energy density, see
+        :py:func:`~pttools.bubble.thermo.va_kinetic_energy_density`
     :param eb: Average energy density $\bar{e}$
     :return: Volume-averaged kinetic energy fraction $K_\text{va}$
     """
@@ -505,7 +508,7 @@ def va_thermal_energy_density(v_shock: float, wn: float, ek: float, delta_e_thet
     with the enthalpy density $w_n$ and the thermal energy density $e - \theta = \frac{3}{4} w_n$.
     This follows from the energy budget ${e}_K + \Delta {e}_Q = -\Delta {e}_\theta$
     (:gw_pt_ssm:`\ ` eq. B.24) with ${e}_Q' = {e}_Q + \Delta {e}_Q$,
-    where the kinetic energy ${e}_K$ (:py:func:`va_kinetic_energy_density`),
+    where the kinetic energy ${e}_K$ (:py:func:`~pttools.bubble.thermo.va_kinetic_energy_density`),
     the thermal energy change $\Delta {e}_Q$ (:py:func:`va_thermal_energy_density_diff`)
     and the trace anomaly change $\Delta {e}_\theta$ (:py:func:`va_trace_anomaly_diff`)
     are the volume integrals of :gw_pt_ssm:`\ ` eq. B.25.

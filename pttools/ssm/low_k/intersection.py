@@ -79,7 +79,8 @@ def z_cross(HLf: float, cs: float, nu: float, tau_star: float, tau_end: float) -
     \Upsilon_{2\nu}^2 \left( \frac{\tau_*}{\tau_\text{end}} \right)$$
     is :giombi_2026:`\ ` eq. 3.5a with $\tau_*^H = \frac{1 + \nu}{H L_f}$
     and the analytical $\mathcal{I}_v = \frac{1}{32\pi^2}$.
-    If $\tau_* = \tau_*^H$, this is equal to :py:func:`z_cross_junction` with the same $\tau_*$.
+    If $\tau_* = \tau_*^H$, this is equal to :py:func:`~pttools.ssm.low_k.intersection.z_cross_junction` with the same
+    $\tau_*$.
 
     :param HLf: $H L_f = r_*$
     :param cs: sound speed, $0 < c_s < \frac{1}{\sqrt{3}}$
@@ -113,7 +114,7 @@ def z_cross_approx[T: FloatOrArr](cs: T, nu: float, eta_ratio: T | float, r_star
     :giombi_2024_cs:`\ ` eq. 4.10
     Please note that this uses the low-frequency kernel of :giombi_2024_cs:`\ ` eq. 3.6,
     and not that of :py:func:`pttools.ssm.low_k.kernel.kernel_low`.
-    Therefore, for $\nu > 0$ this differs from :py:func:`z_cross_junction`.
+    Therefore, for $\nu > 0$ this differs from :py:func:`~pttools.ssm.low_k.intersection.z_cross_junction`.
 
     :param cs: $c_s$, speed of sound
     :param nu: $\nu_\text{gdh2024}$, a scalar

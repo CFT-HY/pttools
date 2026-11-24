@@ -84,15 +84,13 @@ if not system.FORKING or not system.CPU_AFFINITY:
 #: Whether Numba JIT compilation has been disabled.
 NUMBA_DISABLE_JIT: tp.Final[bool] = bool(int(os.getenv("NUMBA_DISABLE_JIT", "0")))
 
+#: Whether the JIT-compiled functions are cached on disk by default.
+#: This is read from the environment variable ``NUMBA_ENABLE_CACHE``, and is enabled by default on GitHub Actions,
+#: in an installed package and on Read the Docs, since in those cases the source code is not expected to change.
 NUMBA_ENABLE_CACHE: bool = \
     bool(int(os.environ["NUMBA_ENABLE_CACHE"])) \
         if "NUMBA_ENABLE_CACHE" in os.environ \
         else (system.IS_GITHUB_ACTIONS or system.IS_PACKAGE or system.IS_READ_THE_DOCS)
-"""Whether to enable caching for Numba-jitted functions
-
-This is enabled by default when running on GitHub Actions or when installed as a pip package,
-since in those cases the source code is not expected to change.
-"""
 
 #: Whether to use NumbaLSODA as the default ODE integrator.
 NUMBA_INTEGRATE: tp.Final[bool] = bool(int(os.getenv("NUMBA_INTEGRATE", "0")))

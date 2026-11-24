@@ -385,8 +385,10 @@ class ConstCSModel(AnalyticModel):
         as derived in :py:meth:`alpha_n_stationary_point`.
         Therefore, the maximum over $[w_{\text{min}}, w_{\text{crit}}]$ is at one of the end points,
         regardless of whether the stationary point is within the range.
-        For $C \leq 0$, the maximum is searched for numerically with :py:meth:`Model.alpha_n_max_find`.
-        The parameters and the return value are those of :py:meth:`Model.alpha_n_max_find`.
+        For $C \leq 0$, the maximum is searched for numerically with
+        :py:meth:`Model.alpha_n_max_find <pttools.models.model.Model.alpha_n_max_find>`.
+        The parameters and the return value are those of
+        :py:meth:`Model.alpha_n_max_find <pttools.models.model.Model.alpha_n_max_find>`.
         """
         if self.bag_wn_const <= 0:
             return super().alpha_n_max_find(w_min=w_min, w_max=w_max)
@@ -413,8 +415,10 @@ class ConstCSModel(AnalyticModel):
         if $w_{\text{stat}}$ is within the range, and otherwise at one of the end points.
         Usually $w_{\text{stat}} > w_{\text{crit}}$ or there is no stationary point,
         and the minimum is at $w_{\text{crit}}$.
-        For $C \leq 0$, the minimum is searched for numerically with :py:meth:`Model.alpha_n_min_find`.
-        The parameters and the return value are those of :py:meth:`Model.alpha_n_min_find`.
+        For $C \leq 0$, the minimum is searched for numerically with
+        :py:meth:`Model.alpha_n_min_find <pttools.models.model.Model.alpha_n_min_find>`.
+        The parameters and the return value are those of
+        :py:meth:`Model.alpha_n_min_find <pttools.models.model.Model.alpha_n_min_find>`.
         """
         if self.bag_wn_const <= 0:
             return super().alpha_n_min_find(w_min=w_min, w_max=w_max)

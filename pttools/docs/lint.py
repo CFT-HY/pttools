@@ -159,7 +159,7 @@ def format_link(link: dict[str, tp.Any]) -> str:
 
 
 def create_parser() -> argparse.ArgumentParser:
-    """Create the parser for the command-line arguments of :py:func:`main`."""
+    """Create the parser for the command-line arguments of ``main``."""
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--target", default="latexpdf-noplot", help="the make target to run (default: %(default)s)")
     parser.add_argument(

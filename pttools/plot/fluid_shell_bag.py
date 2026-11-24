@@ -22,7 +22,7 @@ def plot_fluid_shell_bag(  # noqa: PLR0915
         -> tuple[Figure, fluid_bag.SoundShellDict]:
     r"""Plot the fluid shell of a bag model bubble.
 
-    Calls :func:`pttools.bubble.fluid.fluid_shell` and plots resulting $v, w$ against $\xi$.
+    Calls :func:`pttools.bubble.fluid_bag.sound_shell_dict` and plots resulting $v, w$ against $\xi$.
     Also plots:
 
     - shock curves (where $v$ and $w$ should form shock)

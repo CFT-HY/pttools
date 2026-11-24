@@ -44,6 +44,7 @@ def hdl_link(handle: str, authors: str, year: int | str) -> ExtLink:
 # Todo: add also article titles here. Perhaps use custom objects for storing the links?
 
 HINDMARSH_ET_AL: str = "Hindmarsh et al."
+#: Static links to articles, books and other references, converted to extlinks by :py:func:`convert_extlinks`
 EXTLINKS_STATIC: ExtLinks = {
     # Order of articles: year, name of author
     # Hindmarsh articles
@@ -106,6 +107,7 @@ EXTLINKS_STATIC: ExtLinks = {
         "10.1093/acprof:oso/9780198528906.001.0001", "Relativistic hydrodynamics: Rezzolla, Zanotti", 2013),
     "schroeder_book": ("https://physics.weber.edu/thermal/", "Thermal physics: Schroeder (2000)")
 }
+#: Extlinks whose URL is completed by the argument of the role, e.g. a path in a repository
 EXTLINKS_DYNAMIC: ExtLinks = {
     # Repositories
     "pttools_repo": ("https://github.com/CFT-HY/pttools/%s", "pttools/: %s"),

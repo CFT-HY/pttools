@@ -172,7 +172,8 @@ class ComputedBubble(Cacheable, BaseBubble, abc.ABC):
         but $\xi$ should not decrease.
         As $\xi$ is the self-similar radius, there should be only one $(v, w)$ for each $\xi$,
         and otherwise e.g. the integrals over $\xi$ may be wrong.
-        If $\xi$ is not monotonic, :py:attr:`non_monotonic_xi` is set, an error is logged
+        If $\xi$ is not monotonic, :py:attr:`~pttools.bubble.bubble.base.BaseBubble.non_monotonic_xi` is set, an error
+        is logged
         and a note is added to the bubble.
 
         :return: whether the validation failed, i.e. whether $\xi$ decreases somewhere

@@ -37,8 +37,8 @@ def envelope(
     f2: value just before shock (def, hyb), or zero (det)
 
     If $v_\text{wall}$ and $v_\text{sh}$ are given, the discontinuities are located with them
-    (see :func:`_envelope_wall_shock`).
-    Otherwise, the wall is assumed to be at $\max(f)$ (see :func:`_envelope_max`).
+    (see ``_envelope_wall_shock``).
+    Otherwise, the wall is assumed to be at $\max(f)$ (see ``_envelope_max``).
     This fails, if the wall and the shock are not resolved by the points $\xi$,
     or if $f$ is not at its maximum just behind or just ahead of the wall,
     e.g. for $\lambda$ of a hybrid with $v_\text{wall}$ close to $v_\text{CJ}$,

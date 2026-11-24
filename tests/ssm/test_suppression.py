@@ -170,7 +170,7 @@ class SuppressionTest(unittest.TestCase):
 
 
 class GH21Test(unittest.TestCase):
-    r"""Tests for the suppression factors of :gowling_2021:`\ `, :py:data:`pttools.ssm.suppression.GH21`."""
+    r"""Tests for the suppression factors of :gowling_2021:`\ `, :py:data:`pttools.ssm.suppression.suppression.GH21`."""
 
     V_WALLS: tp.ClassVar[th.FloatArr1D] = np.array([0.4, 0.5, 0.6, 0.7, 0.85])
     ALPHA_NS: tp.ClassVar[th.FloatArr1D] = np.array([0.01, 0.1, 0.3])

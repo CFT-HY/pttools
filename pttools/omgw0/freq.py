@@ -118,7 +118,8 @@ def z[T: FloatOrArrU](f: T, r_star: T | float, f_star0: T | float) -> T:
     $$z(f) = \frac{f}{f_{\ast,0}} {r}_\ast$$
     Inverted from :gowling_2021:`\ ` eq. 2.12.
     This is the inverse of :py:func:`f`.
-    See :py:func:`z_full` for computing $f_{\ast,0}$ from the parameters at the time of GW production.
+    See :py:func:`~pttools.omgw0.freq.z_full` for computing $f_{\ast,0}$ from the parameters at the time of GW
+    production.
 
     :param f: frequencies $f$ today
     :param r_star: $r_\ast$, Hubble-scaled mean bubble spacing

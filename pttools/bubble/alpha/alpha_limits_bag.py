@@ -179,7 +179,7 @@ def alpha_n_max_detonation_bag[T: FloatOrArr](v_wall: T) -> T:
     r"""
     Maximum allowed value of $\alpha_n$ for a detonation with wall speed $v_\text{wall}$ in the Bag Model.
 
-    Same as :func:`alpha_plus_max_detonation`, since for a detonation $\alpha_n = \alpha_+$,
+    Same as :func:`alpha_plus_max_detonation_bag`, since for a detonation $\alpha_n = \alpha_+$,
     as there is no fluid movement outside the wall.
 
     :param v_wall: $v_\text{wall}$

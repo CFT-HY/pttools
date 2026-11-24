@@ -58,7 +58,7 @@ def eta_ratio[T: FloatOrArr](
     $\eta_\text{sh} \approx \frac{R_*}{\bar{U}_f}$ (see :py:func:`pttools.ssm.scaling.H_star_eta_sh`),
     $r_* \equiv \mathcal{H}_* R_*$
     and
-    $\mathcal{H}_* \eta_* = 1 + \nu_\text{gdh2024}$ (see :py:func:`H_eta`).
+    $\mathcal{H}_* \eta_* = 1 + \nu_\text{gdh2024}$ (see :py:func:`~pttools.ssm.barotropic.H_eta`).
     Here $\mathcal{H} \equiv a'/a$ is the conformal Hubble rate, $\eta$ is conformal time
     and $R_*$ is the comoving mean bubble spacing.
 
@@ -192,7 +192,7 @@ def tau_star[T: FloatOrArr](r_star: T, nu: T | float = DEFAULT_NU_GDH2024) -> T:
     = \frac{1 + \nu_\text{gdh2024}}{r_*}$$
     :giombi_2026:`\ ` sec. 2.5 and below eq. 3.5,
     :giombi_2024_cs:`\ ` p. 10,
-    where $\mathcal{H}_* \eta_*$ is given by :py:func:`H_eta`.
+    where $\mathcal{H}_* \eta_*$ is given by :py:func:`~pttools.ssm.barotropic.H_eta`.
 
     :param r_star: $r_* \equiv \mathcal{H}_* R_*$, Hubble-scaled mean bubble spacing
     :param nu: $\nu_\text{gdh2024}$

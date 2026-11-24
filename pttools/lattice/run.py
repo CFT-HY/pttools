@@ -263,7 +263,7 @@ class LatticeRun(LatticeRunSpectra):
             **kwargs: tp.Any) -> SSMSpectrum:
         r"""Compute the Sound Shell Model spectrum for the parameters of the run, without suppression.
 
-        The nucleation type is that of the run, :py:attr:`nuc_type`.
+        The nucleation type is that of the run, :py:attr:`~pttools.lattice.run_base.LatticeRunBase.nuc_type`.
 
         :param model: the equation of state, defaults to the bag model as in the simulations
         :param y: $z = kR_*$ points of the spectrum

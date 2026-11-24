@@ -11,7 +11,7 @@ Version history
 0.10.0
 ------
 - Restructure the project
-- Rename :mod:`pttools.ssmtools` to :mod:`pttools.ssm`
+- Rename :mod:`!pttools.ssmtools` to :mod:`pttools.ssm`
 - Add low-k approximation by :giombi_2024_cs:`\ `
 - Add :giese_2020:`\ ` and :giese_2020:`\ ` fluid solvers
 - Add computation for total integrated GW power using trapezoidal log-log integration
@@ -48,7 +48,7 @@ These modifications were `Mika's master's thesis <https://github.com/AgenttiX/ms
 -----
 These modifications were Mika's summer project in 2021.
 
-- Improve code structure by splitting :mod:`pttools.bubble` and :mod:`pttools.ssmtools` to multiple submodules.
+- Improve code structure by splitting :mod:`pttools.bubble` and :mod:`!pttools.ssmtools` to multiple submodules.
 - Improve code quality.
     - Lint each commit automatically with `Pylint <https://pylint.pycqa.org/en/latest/>`_.
     - Improve compliance with PEP8.
@@ -68,7 +68,7 @@ These modifications were Mika's summer project in 2021.
     - Set up automatic testing with all major operating systems (GNU/Linux, Windows, macOS).
     - Set up automatic performance testing using `timeit <https://docs.python.org/3/library/timeit.html>`_.
     - Set up automatic profiling (:mod:`tests.profiling`) of the performance-critical parts of the code such as
-      :meth:`pttools.ssmtools.spectrum.power_gw_scaled` and
+      :meth:`!pttools.ssmtools.spectrum.power_gw_scaled` and
       :meth:`tests.paper.ssm_paper_utils.do_all_plot_ps_compare_nuc` using
       `cProfile <https://docs.python.org/3/library/profile.html>`_,
       `Pyinstrument <https://github.com/joerick/pyinstrument>`_ and

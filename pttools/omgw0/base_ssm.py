@@ -25,7 +25,7 @@ __all__ = ["BaseSSMOmgw0"]
 class BaseSSMOmgw0(BaseOmgw0, BaseSSMSpectrum, abc.ABC):
     r"""Common base class of the SSM spectra with the GW power spectrum today $\Omega_{\text{gw},0}$.
 
-    This is shared by the computed :py:class:`Spectrum` and the imported
+    This is shared by the computed :py:class:`~pttools.omgw0.spectrum.Spectrum` and the imported
     :py:class:`pttools.export.spectrum.ImportedSpectrum`.
     """
 

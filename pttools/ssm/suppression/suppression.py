@@ -129,7 +129,7 @@ class Suppression:
         :param path: path of the file
         :param name: name of the dataset, used in file names
         :param label: label of the dataset, used in plots. If None, the name is used.
-        :param fill_value: see :py:meth:`__init__`
+        :param fill_value: see :py:class:`Suppression`
         :param keys: names of the columns or arrays of the wall speeds, transition strengths and suppression factors
         :return: the suppression dataset
         """
@@ -321,12 +321,17 @@ M2: float = (0.67 - 0.5) / (0.56 - 0.44)
 C1: float = 0.34 - M1 * 0.24
 C2: float = 0.67000 - M2 * 0.56000
 
+#: :py:data:`WITH_HYBRIDS` without the unpublished data points of the hybrids,
+#: see :py:mod:`pttools.ssm.suppression.suppression_ssm_data.remove_hybrids`
 NO_HYBRIDS: Suppression = Suppression.from_file(
     SUPPRESSION_FOLDER / "suppression_no_hybrids_ssm.txt", name="no_hybrids", label="No hybrids")
+#: :py:data:`NO_HYBRIDS` extended to the low ${v}_\text{wall}$ and low $\alpha_n$ region with :py:func:`extend`
 NO_HYBRIDS_EXT: Suppression = Suppression(
     *extend(v_walls=NO_HYBRIDS.v_walls, alpha_ns=NO_HYBRIDS.alpha_ns, suppressions=NO_HYBRIDS.suppressions),
     name="no_hybrids_extended", label="No hybrids, extended"
 )
+#: Suppression factors of the lattice simulations relative to the SSM, including the hybrids,
+#: computed with :py:mod:`pttools.ssm.suppression.suppression_ssm_data.suppression_ssm_calculator`
 WITH_HYBRIDS: Suppression = Suppression.from_file(
     SUPPRESSION_FOLDER / "suppression_2_ssm.txt", name="with_hybrids", label="With hybrids")
 #: :py:data:`WITH_HYBRIDS` extended to the low ${v}_\text{wall}$ and low $\alpha_n$ region with :py:func:`extend`

@@ -1,6 +1,6 @@
 """Script for testing the Numba caching of functions that call cached parallel functions.
 
-This is run in separate processes by :class:`tests.test_numba_fixes.TestReloadInit`,
+This is run in separate processes by :class:`tests.speedup.test_numba_fixes.TestReloadInit`,
 since the caching behaviour that is being tested can be observed only between processes.
 
 Usage: ``python tests/numba_reload_init.py callee|caller``,

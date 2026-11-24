@@ -44,7 +44,7 @@ class BaseSSMSpectrum(Extractable, BaseSpectrum, abc.ABC):
 
     This defines the attributes of the spectra and the quantities that are computed from them,
     so that the plotting and analysis functions can take any SSM spectrum.
-    The attributes are set either by the computation of :py:class:`SSMSpectrum`,
+    The attributes are set either by the computation of :py:class:`~pttools.ssm.spectrum.SSMSpectrum`,
     or from the data of a file by :py:class:`pttools.export.ssm.ImportedSSMSpectrum`.
     The quantities that need data that is not available, e.g. the spectral densities of a spectrum
     that has been exported without them, raise :py:class:`pttools.export.imported.NotImportedError`.
@@ -162,7 +162,8 @@ class BaseSSMSpectrum(Extractable, BaseSpectrum, abc.ABC):
     def covers(self, y: FloatArr1D, rtol: float = 1e-9) -> bool:
         r"""Whether the $z$ values are within the range of the $y$ array of this spectrum.
 
-        This tells whether :py:meth:`with_params` can interpolate this spectrum to the $z$ values.
+        This tells whether :py:meth:`~pttools.ssm.spectrum.SSMSpectrum.with_params` can interpolate this spectrum to
+        the $z$ values.
 
         :param y: $z = kR_*$ values
         :param rtol: relative tolerance for the endpoints of the range
@@ -356,7 +357,8 @@ class BaseSSMSpectrum(Extractable, BaseSpectrum, abc.ABC):
         r"""$\bar{U}_f$, RMS fluid velocity taking into account the nucleation history.
 
         $$\bar{U}_f = \sqrt{\bar{U}_f^2},$$
-        where $\bar{U}_f^2$ is computed by :py:meth:`compute` from $z$ and ${\lvert A \rvert}^2$
+        where $\bar{U}_f^2$ is computed by :py:meth:`~pttools.ssm.spectrum.SSMSpectrum.compute` from $z$ and
+        ${\lvert A \rvert}^2$
         with :py:func:`pttools.ssm.ssm.ubarf2_from_a2`.
         See :py:attr:`pttools.bubble.bubble.Bubble.ubarf` for the value computed directly from the fluid profile.
         """

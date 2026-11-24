@@ -78,7 +78,7 @@ def llvmlite_has_svml() -> bool:
 def numba_uses_svml() -> bool:
     """Whether Numba uses SVML, i.e. ``numba.config.USING_SVML``.
 
-    This imports Numba, so it should not be called before :data:`SVML` has been loaded.
+    This imports Numba, so it should not be called before :data:`~pttools.speedup.libraries.svml.SVML` has been loaded.
     """
     from numba.core import config  # noqa: PLC0415
 

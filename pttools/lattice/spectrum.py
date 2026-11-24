@@ -120,6 +120,7 @@ class LatticeSpectrum(BaseOmgw0):
                 r_star = run.r_star
             except FileNotFoundError:
                 r_star = np.nan
+        #: $r_*$, Hubble-scaled mean bubble spacing to which the spectrum is scaled
         self.r_star: float = r_star
         self.T_star: float = T_star
         self.g_star: float = g_star

@@ -66,7 +66,7 @@ def ignore_objmode_nogil_warning() -> None:
 
 
 def patch_reload_init() -> None:
-    """Apply :func:`_rebuild_with_reload_init` to Numba."""
+    """Apply ``_rebuild_with_reload_init`` to Numba."""
     if CompileResult._rebuild.__func__ is _rebuild_with_reload_init:
         return
     logger.debug("Patching Numba to keep reload_init on libraries loaded from the cache.")

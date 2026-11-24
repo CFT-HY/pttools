@@ -37,6 +37,7 @@ if th.TYPE_CHECKING_OR_DOCS:
 __all__ = [
     "FIELD_DEFINITION_MODULES",
     "FIELD_MODULES",
+    "AttributeKey",
     "add_field_docs",
     "attribute_name",
     "field_attribute_docs",

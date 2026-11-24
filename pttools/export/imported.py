@@ -33,7 +33,7 @@ class NotImportedError(AttributeError):
 class Imported:
     """Mixin for the objects whose data is imported from a file.
 
-    The stored fields are set as the attributes of the object, see :py:meth:`_import_fields`.
+    The stored fields are set as the attributes of the object, see ``_import_fields``.
     The attributes that are not set raise :py:class:`NotImportedError`.
     """
 

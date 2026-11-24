@@ -52,7 +52,7 @@ def plot_fluid_shells_bag(  # noqa: PLR0912, PLR0915
         wn_as_w_bar: bool = False) -> Figure | tuple[Figure, th.FloatArr2D]:
     r"""Plot the fluid shells of several bag model bubbles.
 
-    Calls :func:`pttools.bubble.fluid.fluid_shell` and plots resulting v, w against xi.
+    Calls :func:`pttools.bubble.fluid_bag.sound_shell_bag` and plots resulting v, w against xi.
     Annotates titles with:
 
     - Wall type, $v_\text{wall}, \alpha_n$

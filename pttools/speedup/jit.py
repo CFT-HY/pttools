@@ -37,10 +37,10 @@ def njit(func: None = None, **kwargs: tp.Any) -> Decorator: ...
 
 
 def njit(func: tp.Callable | None = None, **kwargs: tp.Any) -> tp.Callable:
-    """Wrapper for numba.njit, which applies the default options of :data:`NUMBA_OPTS`.
+    """Wrapper for numba.njit, which applies the default options of :data:`~pttools.speedup.options.NUMBA_OPTS`.
 
     Options given as keyword arguments override the defaults.
-    For example, ``cache=True`` enables caching regardless of :data:`NUMBA_ENABLE_CACHE`.
+    For example, ``cache=True`` enables caching regardless of :data:`~pttools.speedup.options.NUMBA_ENABLE_CACHE`.
     This should be used only for functions that do not call code from other files,
     and which can therefore be cached safely even when developing PTtools.
 
