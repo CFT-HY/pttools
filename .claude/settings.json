@@ -25,6 +25,7 @@
         "*.readthedocs.io",
         "docs.h5py.org",
         "docs.pytest.org",
+        "docs.python.org",
         "docs.scipy.org",
         "docs.sympy.org",
         "matplotlib.org",
