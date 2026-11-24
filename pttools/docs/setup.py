@@ -29,6 +29,8 @@ from pttools.docs.fields import add_field_docs, note_field_dependencies
 from pttools.docs.lock import setup_source_lock
 from pttools.docs.minigallery import add_minigalleries, remove_duplicate_minigalleries
 from pttools.docs.paths import LINT_DIR_NAME, NO_PLOTS_ENV_VAR, SPHINX_LOG_ENV_VAR, default_log_dir
+from pttools.docs.references import resolve_alias_reference
+from pttools.docs.typehints import define_type_checking_imports, record_class_typehints
 from pttools.logging import setup_logging
 from pttools.utils.system import IS_READ_THE_DOCS
 
@@ -145,7 +147,7 @@ def setup_sphinx_logging(log_path: str | os.PathLike[str] | None = None, level: 
     This should be called from ``docs/conf.py``.
 
     :param log_path: path of the log file. If None, the path is read from the environment variable
-        :py:data:`SPHINX_LOG_ENV_VAR`, and if that is not set, a timestamped path is generated
+        :py:data:`~pttools.docs.paths.SPHINX_LOG_ENV_VAR`, and if that is not set, a timestamped path is generated
         in the directory given by :py:func:`pttools.docs.paths.default_log_dir`.
     :param level: the minimum level of the messages saved to the file.
         With :py:data:`logging.DEBUG`, the file contains also the debug messages, which are not printed to the console.
@@ -258,7 +260,12 @@ def setup_sphinx(app: Sphinx) -> None:
     app.connect("autodoc-process-docstring", note_field_dependencies)
     app.connect("object-description-transform", remove_duplicate_minigalleries)
     app.connect("builder-inited", load_fluid_reference, priority=400)
+    app.connect("missing-reference", resolve_alias_reference)
     app.connect("warn-missing-reference", ignore_nitpicky_docs)
+    # The names that are imported only for type checking are needed for evaluating the type hints.
+    app.connect("builder-inited", define_type_checking_imports)
+    # This has to be run after record_typehints of sphinx.ext.autodoc.typehints, which has the default priority 500.
+    app.connect("autodoc-process-signature", record_class_typehints, priority=600)
     # The setup function of conf.py is run after the extensions have been loaded,
     # and therefore overrides the directive of matplotlib.sphinxext.plot_directive.
     if no_plots():

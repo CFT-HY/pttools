@@ -127,6 +127,14 @@ suppress_warnings = [
 nitpick_ignore_regex = [
     # yappi has no Sphinx documentation, see pttools.docs.intersphinx.
     ("py:.*", r"yappi\..*"),
+    # The type parameters of generic functions and classes, e.g. T2 of def f[T2: float](x: T2) -> T2,
+    # are not documented as objects. A ParamSpec P is referred to as typing.P.
+    ("py:.*", r"(typing\.)?[A-Z]\d?"),
+    # These are not documented in the intersphinx inventories of these projects, or they have no inventory.
+    ("py:.*", r"(dash|docutils)(\..*)?"),
+    ("py:.*", r"numba\.extending\.overload"),
+    ("py:.*", r"sphinx\.ext\.autodoc\..*Options"),
+    ("py:mod", r"uncertainties\.(umath|unumpy)"),
 ]
 
 

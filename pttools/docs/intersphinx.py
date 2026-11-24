@@ -12,14 +12,17 @@ INTERSPHINX_MAPPING: IntersphinxMapping = {
     "numpy": ("https://numpy.org/doc/stable/", None),
     "pandas": ("https://pandas.pydata.org/docs/", None),
     "plotly": ("https://plotly.com/python-api-reference/", None),
+    "psutil": ("https://psutil.readthedocs.io/stable/", None),
     "pyinstrument": ("https://pyinstrument.readthedocs.io/en/latest/", None),
     "pylint": ("https://pylint.readthedocs.io/en/stable/", None),
     "pytest": ("https://docs.pytest.org/en/stable/", None),
     "python": ("https://docs.python.org/3/", None),
     "scipy": ("https://docs.scipy.org/doc/scipy/", None),
+    "sphinx": ("https://www.sphinx-doc.org/en/master/", None),
     "sympy": ("https://docs.sympy.org/latest/", None),
     "uncertainties": ("https://uncertainties.readthedocs.io/en/latest/", None),
     # The inventory of yappi on Read the Docs is an empty placeholder without any Python objects,
     # as the documentation of yappi is in Markdown files on GitHub instead of Sphinx.
-    # "yappi":("https://yappi.readthedocs.io/en/latest/", None),
+    # dash and docutils have no intersphinx inventory either.
+    # "yappi": ("https://yappi.readthedocs.io/en/latest/", None),
 }

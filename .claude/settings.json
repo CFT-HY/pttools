@@ -30,7 +30,8 @@
         "docs.sympy.org",
         "matplotlib.org",
         "numpy.org",
-        "plotly.com"
+        "plotly.com",
+        "www.sphinx-doc.org"
       ]
     }
   }
