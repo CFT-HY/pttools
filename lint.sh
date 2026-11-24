@@ -13,16 +13,17 @@ MULTIPLE_FAILED=100
 
 usage() {
   cat <<EOF
-Usage: $0 [-f|--fast] [-n|--nitpicky] [-h|--help]
+Usage: $0 [-f|--fast] [-N|--no-nitpicky] [-h|--help]
 
 Run pyrefly check, pyrefly coverage check, ruff check and the documentation lint (pttools.docs.lint).
 
 Options:
   -f, --fast      Skip the documentation lint, which is significantly slower than the other checks.
-  -n, --nitpicky  Run the documentation lint with the --nitpicky option of Sphinx,
-                  which warns about all the references whose target is not found.
-                  As the documentation is built with --fail-on-warning, these warnings fail the lint.
-                  Without this option, such references are rendered as plain text without a link.
+  -N, --no-nitpicky
+                  Run the documentation lint without the nitpicky mode of Sphinx, which is enabled in docs/conf.py.
+                  The nitpicky mode warns about all the references whose target is not found,
+                  and as the documentation is built with --fail-on-warning, these warnings fail the lint.
+                  Without it, such references are rendered as plain text without a link.
   -h, --help      Show this help.
 
 Exit code: 0 if all checks pass, the exit code of the failed check if exactly one check fails,
@@ -31,11 +32,11 @@ EOF
 }
 
 FAST=false
-NITPICKY=false
+NITPICKY=true
 for arg in "$@"; do
   case "${arg}" in
     -f|--fast) FAST=true ;;
-    -n|--nitpicky) NITPICKY=true ;;
+    -N|--no-nitpicky) NITPICKY=false ;;
     -h|--help) usage; exit 0 ;;
     *) echo "Unknown argument: ${arg}" >&2; usage >&2; exit 64 ;;
   esac
@@ -63,9 +64,9 @@ run uv run pyrefly check
 run uv run pyrefly coverage check
 run uv run ruff check
 if [ "${FAST}" = false ]; then
-  if [ "${NITPICKY}" = true ]; then
+  if [ "${NITPICKY}" = false ]; then
     # docs/Makefile gives the variable O to sphinx-build, and pttools.docs.lint keeps the O of the environment.
-    O="${O:+${O} }--nitpicky" run uv run python -m pttools.docs.lint
+    O="${O:+${O} }-D nitpicky=0" run uv run python -m pttools.docs.lint
   else
     run uv run python -m pttools.docs.lint
   fi

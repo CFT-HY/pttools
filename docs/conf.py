@@ -123,7 +123,11 @@ suppress_warnings = [
     "autosectionlabel.*",
 ]
 
-# References whose target is not found, which are ignored in the nitpicky mode (./lint.sh --nitpicky).
+# Warn about all the references whose target is not found, which would otherwise be rendered without a link.
+# As the documentation is built with --fail-on-warning, these warnings fail the build.
+# This can be disabled with "-D nitpicky=0", e.g. with ./lint.sh --no-nitpicky.
+nitpicky = True
+# References whose target is not found, which are ignored in the nitpicky mode.
 nitpick_ignore_regex = [
     # yappi has no Sphinx documentation, see pttools.docs.intersphinx.
     ("py:.*", r"yappi\..*"),
