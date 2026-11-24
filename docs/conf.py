@@ -133,6 +133,9 @@ nitpick_ignore_regex = [
     # These are not documented in the intersphinx inventories of these projects, or they have no inventory.
     ("py:.*", r"(dash|docutils)(\..*)?"),
     ("py:.*", r"numba\.extending\.overload"),
+    ("py:.*", r"numba\.core\.(registry\.CPUDispatcher|types\.misc\.CPointer|typing\.templates\.Signature)"),
+    ("py:.*", r"platform\.uname_result"),
+    ("py:.*", r"uncertainties\.core\.AffineScalarFunc"),
     ("py:.*", r"sphinx\.ext\.autodoc\..*Options"),
     ("py:mod", r"uncertainties\.(umath|unumpy)"),
 ]

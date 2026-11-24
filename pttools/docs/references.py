@@ -12,7 +12,7 @@ but the references in the docstrings and the evaluated type hints may use other 
   are looked up in the class and the module of the docstring.
 - The names of the objects of other projects in their private modules,
   e.g. ``numpy._typing._array_like.ArrayLike``, which are given by the evaluated type hints,
-  are replaced with their public names of :py:data:`REFERENCE_PREFIX_ALIASES`.
+  are replaced with their public names of :py:data:`REFERENCE_ALIASES`.
 - The references to the objects of other projects whose type in their intersphinx inventory
   differs from the role of the reference, e.g. a type hint ``numpy.typing.ArrayLike``,
   which is a ``py:class`` reference to a ``py:data`` object, are resolved regardless of the type.
@@ -20,6 +20,7 @@ but the references in the docstrings and the evaluated type hints may use other 
 
 import importlib
 import logging
+import re
 from types import ModuleType
 
 from docutils import nodes
@@ -29,7 +30,7 @@ from sphinx.environment import BuildEnvironment
 from sphinx.ext.intersphinx import missing_reference
 
 __all__ = [
-    "REFERENCE_PREFIX_ALIASES",
+    "REFERENCE_ALIASES",
     "RESOLVED_PACKAGES",
     "canonical_name",
     "canonical_target",
@@ -38,17 +39,19 @@ __all__ = [
 
 logger: logging.Logger = logging.getLogger(__name__)
 
-#: The prefixes of the names in the private modules of other projects,
+#: Patterns of the names in the private modules of other projects,
 #: and the public names with which these objects are documented in their intersphinx inventories.
-REFERENCE_PREFIX_ALIASES: dict[str, str] = {
-    "concurrent.futures._base.": "concurrent.futures.",
-    "concurrent.futures.process.": "concurrent.futures.",
+#: The first matching pattern is replaced with :py:func:`re.sub`.
+REFERENCE_ALIASES: dict[str, str] = {
+    r"^_thread\.lock$": "_thread.LockType",
+    r"^concurrent\.futures\.\w+\.": "concurrent.futures.",
     # The Python documentation documents the profilers of cProfile and profile together as profile.Profile.
-    "cProfile.Profile": "profile.Profile",
-    "numpy._typing._array_like.": "numpy.typing.",
-    "numpy._typing._dtype_like.": "numpy.typing.",
-    "plotly.graph_objs._figure.": "plotly.graph_objects.",
-    "plotly.graph_objs._surface.": "plotly.graph_objects.",
+    r"^cProfile\.Profile$": "profile.Profile",
+    # The Numba documentation documents CFunc without its module.
+    r"^numba\.core\.ccallback\.CFunc$": "CFunc",
+    r"^numpy\._typing\._\w+\.": "numpy.typing.",
+    r"^plotly\.graph_objs\._\w+\.": "plotly.graph_objects.",
+    r"^unittest\.case\.": "unittest.",
 }
 #: The packages whose objects are resolved to the modules where they are defined.
 RESOLVED_PACKAGES: tuple[str, ...] = ("examples", "pttools", "tests")
@@ -132,9 +135,9 @@ def resolve_alias_reference(
         return None
     target: str = node["reftarget"]
     new_target: str = target
-    for prefix, alias in REFERENCE_PREFIX_ALIASES.items():
-        if target.startswith(prefix):
-            new_target = alias + target.removeprefix(prefix)
+    for pattern, alias in REFERENCE_ALIASES.items():
+        if re.search(pattern, target):
+            new_target = re.sub(pattern, alias, target, count=1)
             break
     else:
         new_target = canonical_target(target, node.get("py:module"), node.get("py:class")) or target
