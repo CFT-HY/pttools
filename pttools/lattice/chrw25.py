@@ -9,7 +9,7 @@ so the run directories of the source repository should be used when available.
 The location of the data is given by the environment variable ``PTTOOLS_LATTICE_DATA_DIR``,
 which should point to the root of the ``UETC_paper_Hydro`` repository.
 If it's not set, ``UETC_paper_Hydro`` in the same directory as the project repository is used,
-see :py:data:`DEFAULT_DATA_DIR`.
+see :py:data:`CHRW25_DEFAULT_DATA_DIR`.
 """
 
 import logging
@@ -25,11 +25,11 @@ from pttools.ssm.nucleation import NucType
 from pttools.utils.system import PROJECT_DIR
 
 __all__ = [
+    "CHRW25_DATA_DIR_ENV",
+    "CHRW25_DEFAULT_DATA_DIR",
     "CHRW25_RUNS",
-    "DATA_DIR_ENV",
-    "DEFAULT_DATA_DIR",
+    "chrw25_data_dir",
     "compare_chrw25_runs",
-    "data_dir",
     "load_chrw25_run",
     "load_chrw25_runs",
     "step_ends",
@@ -37,6 +37,13 @@ __all__ = [
 
 logger: logging.Logger = logging.getLogger(__name__)
 
+#: Environment variable for the location of the data
+CHRW25_DATA_DIR_ENV: str = "PTTOOLS_LATTICE_DATA_DIR"
+#: Default location of the data, ``UETC_paper_Hydro`` in the same directory as the project repository.
+#: If PTtools is installed as a package (see :py:data:`pttools.utils.system.IS_PACKAGE`),
+#: the project repository is the one at whose root the virtual environment of PTtools is.
+#: Otherwise, it's the PTtools repository. See :py:data:`pttools.utils.system.PROJECT_DIR`.
+CHRW25_DEFAULT_DATA_DIR: Path | None = None if PROJECT_DIR is None else PROJECT_DIR.parent / "UETC_paper_Hydro"
 #: The runs of :correia_2025:`\ `.
 #: The time steps are those of ``plot_ps.py`` of the Zenodo scripts, which produced fig. 5.
 #: The deflagration was run twice to different final times, and the longer run is used here.
@@ -58,13 +65,22 @@ CHRW25_RUNS: dict[str, LatticeRunParams] = {
         v_wall=0.44, alpha_n=0.5, nuc_type=NucType.SIMULTANEOUS, fig_step=22000, fig_step_prev=18000,
         fit_start_fraction=0.6, fit_step_end=39600),
 }
-#: Environment variable for the location of the data
-DATA_DIR_ENV: str = "PTTOOLS_LATTICE_DATA_DIR"
-#: Default location of the data, ``UETC_paper_Hydro`` in the same directory as the project repository.
-#: If PTtools is installed as a package (see :py:data:`pttools.utils.system.IS_PACKAGE`),
-#: the project repository is the one at whose root the virtual environment of PTtools is.
-#: Otherwise, it's the PTtools repository. See :py:data:`pttools.utils.system.PROJECT_DIR`.
-DEFAULT_DATA_DIR: Path | None = None if PROJECT_DIR is None else PROJECT_DIR.parent / "UETC_paper_Hydro"
+
+
+def chrw25_data_dir() -> Path | None:
+    r"""Find the directory of the data of :correia_2025:`\ `.
+
+    :return: the root directory of the ``UETC_paper_Hydro`` repository, or None if it's not found
+    """
+    path = os.environ.get(CHRW25_DATA_DIR_ENV)
+    if path is not None:
+        if Path(path).is_dir():
+            return Path(path)
+        logger.warning("The directory given by %s does not exist: %s", CHRW25_DATA_DIR_ENV, path)
+        return None
+    if CHRW25_DEFAULT_DATA_DIR is not None and CHRW25_DEFAULT_DATA_DIR.is_dir():
+        return CHRW25_DEFAULT_DATA_DIR
+    return None
 
 
 def compare_chrw25_runs(
@@ -81,7 +97,7 @@ def compare_chrw25_runs(
     :param y_min: smallest $z = kR_*$ to include in the fit of the suppression factor
     :param r_star: $r_*$, Hubble-scaled mean bubble spacing of the spectra,
         see :py:class:`pttools.lattice.comparison.LatticeComparison`
-    :param path: root directory of the data, defaults to :py:func:`data_dir`
+    :param path: root directory of the data, defaults to :py:func:`chrw25_data_dir`
     :param missing_ok: whether to return an empty dict with a warning instead of raising an error
         if the data is not found, see :py:func:`load_chrw25_runs`
     :param kwargs: additional arguments for :py:class:`pttools.lattice.comparison.LatticeComparison`
@@ -94,20 +110,6 @@ def compare_chrw25_runs(
     }
 
 
-def data_dir() -> Path | None:
-    r"""Find the directory of the data of :correia_2025:`\ `.
-
-    :return: the root directory of the ``UETC_paper_Hydro`` repository, or None if it's not found
-    """
-    path = os.environ.get(DATA_DIR_ENV)
-    if path is not None:
-        if Path(path).is_dir():
-            return Path(path)
-        logger.warning("The directory given by %s does not exist: %s", DATA_DIR_ENV, path)
-        return None
-    return DEFAULT_DATA_DIR if DEFAULT_DATA_DIR is not None and DEFAULT_DATA_DIR.is_dir() else None
-
-
 def load_chrw25_run(name: str, path: str | os.PathLike[str] | None = None) -> LatticeRun:
     r"""Load a simulation run of :correia_2025:`\ `.
 
@@ -115,14 +117,14 @@ def load_chrw25_run(name: str, path: str | os.PathLike[str] | None = None) -> La
     and therefore it's searched for in the sibling directories as well.
 
     :param name: name of the run, a key of :py:data:`CHRW25_RUNS`
-    :param path: root directory of the data, defaults to :py:func:`data_dir`
+    :param path: root directory of the data, defaults to :py:func:`chrw25_data_dir`
     :return: the run
     :raises FileNotFoundError: if the data is not found
     """
-    root = data_dir() if path is None else Path(path)
+    root = chrw25_data_dir() if path is None else Path(path)
     if root is None:
         raise FileNotFoundError(
-            f"The data of Correia et al. was not found. Please set the environment variable {DATA_DIR_ENV}.")
+            f"The data of Correia et al. was not found. Please set the environment variable {CHRW25_DATA_DIR_ENV}.")
     meta = CHRW25_RUNS[name]
     run_dir = root / meta.subdir
     input_path = run_dir / INPUT_FILE_NAME
@@ -145,16 +147,16 @@ def load_chrw25_run(name: str, path: str | os.PathLike[str] | None = None) -> La
 def load_chrw25_runs(path: str | os.PathLike[str] | None = None, missing_ok: bool = False) -> dict[str, LatticeRun]:
     r"""Load all the simulation runs of :correia_2025:`\ `.
 
-    :param path: root directory of the data, defaults to :py:func:`data_dir`
+    :param path: root directory of the data, defaults to :py:func:`chrw25_data_dir`
     :param missing_ok: whether to return an empty dict with a warning instead of raising an error
         if the data is not found, e.g. for skipping examples
     :return: the runs with the keys of :py:data:`CHRW25_RUNS`
     :raises FileNotFoundError: if the data is not found and ``missing_ok`` is False
     """
-    root = data_dir() if path is None else Path(path)
+    root = chrw25_data_dir() if path is None else Path(path)
     if missing_ok and (root is None or not root.is_dir()):
         logger.warning(
-            "The data of Correia et al. was not found. Please set the environment variable %s.", DATA_DIR_ENV)
+            "The data of Correia et al. was not found. Please set the environment variable %s.", CHRW25_DATA_DIR_ENV)
         return {}
     return {name: load_chrw25_run(name, root) for name in CHRW25_RUNS}
 

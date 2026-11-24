@@ -3,7 +3,7 @@ r"""The $960^3$ simulations of :cutting_2019:`\ `.
 The location of the data is given by the environment variable ``PTTOOLS_CHW19_DATA_DIR``,
 which should point to the directory that contains the run directories.
 If it's not set, ``CHW19_simulation_data`` in the same directory as the project repository is used,
-see :py:data:`DEFAULT_DATA_DIR`.
+see :py:data:`CHW19_DEFAULT_DATA_DIR`.
 
 The name of each run directory gives its parameters, e.g. ``alph-0.05-vw-0.24-Nb-8-L-960-dx-1.0``,
 see :py:data:`RUN_NAME_PATTERN`, optionally followed by a variant.
@@ -66,15 +66,27 @@ from pttools.lattice.run import LatticeRun
 from pttools.ssm.nucleation import NucType
 from pttools.utils.system import PROJECT_DIR
 
-__all__ = ["chw19_runs", "load_chw19_run", "load_chw19_runs"]
+__all__ = [
+    "CHW19_DATA_DIR_ENV",
+    "CHW19_DEFAULT_DATA_DIR",
+    "RUN_NAME_PATTERN",
+    "T_FIN",
+    "chw19_data_dir",
+    "chw19_runs",
+    "epsilon_r",
+    "load_chw19_run",
+    "load_chw19_runs",
+    "run_params",
+    "table_i_values",
+]
 
 logger: logging.Logger = logging.getLogger(__name__)
 
 #: Environment variable for the location of the data
-DATA_DIR_ENV: str = "PTTOOLS_CHW19_DATA_DIR"
+CHW19_DATA_DIR_ENV: str = "PTTOOLS_CHW19_DATA_DIR"
 #: Default location of the data, ``CHW19_simulation_data`` in the same directory as the project repository,
-#: see :py:data:`pttools.lattice.chrw25.DEFAULT_DATA_DIR`.
-DEFAULT_DATA_DIR: Path | None = None if PROJECT_DIR is None else PROJECT_DIR.parent / "CHW19_simulation_data"
+#: see :py:data:`pttools.lattice.chrw25.CHRW25_DEFAULT_DATA_DIR`.
+CHW19_DEFAULT_DATA_DIR: Path | None = None if PROJECT_DIR is None else PROJECT_DIR.parent / "CHW19_simulation_data"
 #: Pattern of the names of the run directories, e.g. ``alph-0.05-vw-0.24-Nb-8-L-960-dx-1.0-seed-2``
 RUN_NAME_PATTERN: re.Pattern[str] = re.compile(
     r"alph-(?P<alpha_n>\d+(?:\.\d+)?)-vw-(?P<v_wall>\d+(?:\.\d+)?)-Nb-(?P<n_bubbles>\d+)"
@@ -85,13 +97,29 @@ RUN_NAME_PATTERN: re.Pattern[str] = re.compile(
 T_FIN: dict[float, float] = {0.24: 4800., 0.44: 2400., 0.56: 2800., 0.82: 2800., 0.92: 2400.}
 
 
+def chw19_data_dir() -> Path | None:
+    r"""Find the directory of the data of :cutting_2019:`\ `.
+
+    :return: the directory, or None if it's not found
+    """
+    path = os.environ.get(CHW19_DATA_DIR_ENV)
+    if path is not None:
+        if Path(path).is_dir():
+            return Path(path)
+        logger.warning("The directory given by %s does not exist: %s", CHW19_DATA_DIR_ENV, path)
+        return None
+    if CHW19_DEFAULT_DATA_DIR is not None and CHW19_DEFAULT_DATA_DIR.is_dir():
+        return CHW19_DEFAULT_DATA_DIR
+    return None
+
+
 def chw19_runs(path: str | os.PathLike[str] | None = None, missing_ok: bool = False) -> dict[str, LatticeRunParams]:
     r"""The parameters of the runs of :cutting_2019:`\ `.
 
     The runs are the subdirectories of the data directory whose names match :py:data:`RUN_NAME_PATTERN`,
     see :py:func:`run_params`.
 
-    :param path: directory of the data, defaults to :py:func:`data_dir`
+    :param path: directory of the data, defaults to :py:func:`chw19_data_dir`
     :param missing_ok: whether to return an empty dict with a warning instead of raising an error
         if the data is not found, e.g. for skipping examples
     :return: the parameters of the runs by the names of their directories, in alphabetical order
@@ -105,20 +133,6 @@ def chw19_runs(path: str | os.PathLike[str] | None = None, missing_ok: bool = Fa
         for run_dir in sorted(root.iterdir())
         if run_dir.is_dir() and RUN_NAME_PATTERN.fullmatch(run_dir.name)
     }
-
-
-def data_dir() -> Path | None:
-    r"""Find the directory of the data of :cutting_2019:`\ `.
-
-    :return: the directory, or None if it's not found
-    """
-    path = os.environ.get(DATA_DIR_ENV)
-    if path is not None:
-        if Path(path).is_dir():
-            return Path(path)
-        logger.warning("The directory given by %s does not exist: %s", DATA_DIR_ENV, path)
-        return None
-    return DEFAULT_DATA_DIR if DEFAULT_DATA_DIR is not None and DEFAULT_DATA_DIR.is_dir() else None
 
 
 def epsilon_r(run: LatticeRun) -> float:
@@ -145,7 +159,7 @@ def load_chw19_run(
     r"""Load a simulation run of :cutting_2019:`\ `.
 
     :param name: name of the directory of the run, or its full path
-    :param path: directory of the data, defaults to :py:func:`data_dir`. Ignored if ``name`` is a full path.
+    :param path: directory of the data, defaults to :py:func:`chw19_data_dir`. Ignored if ``name`` is a full path.
     :param params: the parameters of the run, defaults to :py:func:`run_params`
     :param kwargs: additional arguments for :py:class:`pttools.lattice.run.LatticeRun`
     :return: the run
@@ -153,11 +167,11 @@ def load_chw19_run(
     """
     run_dir = Path(name)
     if not run_dir.is_absolute() and len(run_dir.parts) == 1:
-        root = data_dir() if path is None else Path(path)
+        root = chw19_data_dir() if path is None else Path(path)
         if root is None:
             raise FileNotFoundError(
                 "The data of Cutting et al. was not found. "
-                f"Please set the environment variable {DATA_DIR_ENV}.")
+                f"Please set the environment variable {CHW19_DATA_DIR_ENV}.")
         run_dir = root / name
     meta = run_params(run_dir) if params is None else params
     return LatticeRun(
@@ -183,7 +197,7 @@ def load_chw19_runs(
 
     :param names: names of the directories of the runs, or their full paths, defaults to all the runs
         of :py:func:`chw19_runs`
-    :param path: directory of the data, defaults to :py:func:`data_dir`
+    :param path: directory of the data, defaults to :py:func:`chw19_data_dir`
     :param missing_ok: whether to return an empty dict with a warning instead of raising an error
         if the data is not found, see :py:func:`chw19_runs`
     :return: the runs by the names of their directories
@@ -203,14 +217,14 @@ def load_chw19_runs(
 
 def _root(path: str | os.PathLike[str] | None, missing_ok: bool) -> Path | None:
     """The directory of the data, or None if it's not found and ``missing_ok`` is True."""
-    root = data_dir() if path is None else Path(path)
+    root = chw19_data_dir() if path is None else Path(path)
     if root is None or not root.is_dir():
         if missing_ok:
             logger.warning(
-                "The data of Cutting et al. was not found. Please set the environment variable %s.", DATA_DIR_ENV)
+                "The data of Cutting et al. was not found. Please set the environment variable %s.", CHW19_DATA_DIR_ENV)
             return None
         raise FileNotFoundError(
-            f"The data of Cutting et al. was not found. Please set the environment variable {DATA_DIR_ENV}.")
+            f"The data of Cutting et al. was not found. Please set the environment variable {CHW19_DATA_DIR_ENV}.")
     return root
 
 

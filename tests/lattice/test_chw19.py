@@ -244,7 +244,7 @@ class LegacyRunTest(unittest.TestCase):
         assert values["Ubar_f,max"] == pytest.approx(np.sqrt(0.01 / ENTHALPY))
 
 
-@pytest.mark.skipif(chw19.data_dir() is None, reason="The data of Cutting et al. is not available.")
+@pytest.mark.skipif(chw19.chw19_data_dir() is None, reason="The data of Cutting et al. is not available.")
 class CuttingDataTest(unittest.TestCase):
     r"""Tests with the data of :cutting_2019:`\ `, which are skipped if the data is not available."""
 

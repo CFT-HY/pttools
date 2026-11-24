@@ -80,9 +80,9 @@ def run_dirs(names: tp.Iterable[str] | None = None) -> list[Path]:
     :return: the directories of the runs that were found. A warning is logged for those that were not.
     """
     if names is None:
-        root = chw19.data_dir()
+        root = chw19.chw19_data_dir()
         return [] if root is None else [root / name for name in chw19.chw19_runs(root, missing_ok=True)]
-    root = chw19.data_dir()
+    root = chw19.chw19_data_dir()
     dirs = []
     for name in names:
         path = Path(name)

@@ -14,8 +14,8 @@ from pttools.lattice import (
     LatticeComparison,
     LatticeRun,
     Quantity,
+    chrw25_data_dir,
     compare_chrw25_runs,
-    data_dir,
     integral_scale,
     load_chrw25_run,
     load_chrw25_runs,
@@ -338,7 +338,7 @@ class LoadRunsTest(unittest.TestCase):
                 compare_chrw25_runs(path=path)
 
 
-@pytest.mark.skipif(data_dir() is None, reason="The data of Correia et al. is not available.")
+@pytest.mark.skipif(chrw25_data_dir() is None, reason="The data of Correia et al. is not available.")
 class CorreiaDataTest(unittest.TestCase):
     r"""Tests with the data of :correia_2025:`\ `, which are skipped if the data is not available."""
 
