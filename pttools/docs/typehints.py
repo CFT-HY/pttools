@@ -37,7 +37,9 @@ __all__ = ["TYPE_CHECKING_PACKAGES", "define_type_checking_imports", "record_cla
 
 logger: logging.Logger = logging.getLogger(__name__)
 
-#: The packages whose type checking imports are defined by :py:func:`define_type_checking_imports`.
+#: The default packages whose type checking imports are defined by :py:func:`define_type_checking_imports`,
+#: i.e. the default of the Sphinx configuration value ``type_checking_packages``.
+#: Other projects that use :py:func:`pttools.docs.setup.setup_sphinx` should set it to their own packages.
 #: The examples are not included, as importing an example without a main guard would run it.
 TYPE_CHECKING_PACKAGES: tuple[str, ...] = ("pttools", "tests")
 
@@ -58,19 +60,28 @@ def _module_name(path: Path, root: Path) -> str:
     return ".".join(parts)
 
 
-def define_type_checking_imports(
-        app: Sphinx | None = None, packages: tp.Iterable[str] = TYPE_CHECKING_PACKAGES) -> None:
+def define_type_checking_imports(app: Sphinx | None = None, packages: tp.Iterable[str] | None = None) -> None:
     """Import the names that the modules of the given packages import only ``if TYPE_CHECKING``.
 
     The names are imported to the modules, so that Sphinx can evaluate the type hints that use them.
     The names that are already defined in a module are not changed.
+    The packages that cannot be imported are skipped with a warning.
     This is a handler for the ``builder-inited`` event of Sphinx.
 
-    :param app: the Sphinx application, which is not used
-    :param packages: the names of the packages
+    :param app: the Sphinx application, whose configuration value ``type_checking_packages``
+        gives the packages if ``packages`` is None
+    :param packages: the names of the packages, defaults to those of ``app``,
+        or :py:data:`TYPE_CHECKING_PACKAGES` if ``app`` is None
     """
+    if packages is None:
+        packages = TYPE_CHECKING_PACKAGES if app is None else app.config.type_checking_packages
     for package in packages:
-        for module_name, imports in type_checking_imports(Path(importlib.import_module(package).__path__[0])).items():
+        try:
+            path = Path(importlib.import_module(package).__path__[0])
+        except ImportError as e:
+            logger.warning("Could not import the package %s to define its type checking imports: %s", package, e)
+            continue
+        for module_name, imports in type_checking_imports(path).items():
             try:
                 module = importlib.import_module(module_name)
             except ImportError as e:

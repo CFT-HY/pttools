@@ -30,7 +30,7 @@ from pttools.docs.lock import setup_source_lock
 from pttools.docs.minigallery import add_minigalleries, remove_duplicate_minigalleries
 from pttools.docs.paths import LINT_DIR_NAME, NO_PLOTS_ENV_VAR, SPHINX_LOG_ENV_VAR, default_log_dir
 from pttools.docs.references import resolve_alias_reference
-from pttools.docs.typehints import define_type_checking_imports, record_class_typehints
+from pttools.docs.typehints import TYPE_CHECKING_PACKAGES, define_type_checking_imports, record_class_typehints
 from pttools.docs.vectorized import add_vectorized_functions
 from pttools.logging import setup_logging
 from pttools.utils.system import IS_READ_THE_DOCS
@@ -251,6 +251,8 @@ def setup_sphinx(app: Sphinx) -> None:
     """Set up the customisations of the PTtools documentation.
 
     To use this function, set `setup = setup_sphinx` in your `docs/conf.py`.
+    Set also ``type_checking_packages`` to the packages of your project,
+    see :py:func:`pttools.docs.typehints.define_type_checking_imports`.
     """
     # Simultaneous builds wait for each other while generating files in the source directory.
     setup_source_lock(app)
@@ -266,6 +268,8 @@ def setup_sphinx(app: Sphinx) -> None:
     app.connect("missing-reference", resolve_alias_reference)
     app.connect("warn-missing-reference", ignore_nitpicky_docs)
     # The names that are imported only for type checking are needed for evaluating the type hints.
+    # Other projects set type_checking_packages to their own packages in their conf.py.
+    app.add_config_value("type_checking_packages", TYPE_CHECKING_PACKAGES, "env", types=frozenset({list, tuple}))
     app.connect("builder-inited", define_type_checking_imports)
     # This has to be run after record_typehints of sphinx.ext.autodoc.typehints, which has the default priority 500.
     app.connect("autodoc-process-signature", record_class_typehints, priority=600)
