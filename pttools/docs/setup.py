@@ -31,6 +31,7 @@ from pttools.docs.minigallery import add_minigalleries, remove_duplicate_minigal
 from pttools.docs.paths import LINT_DIR_NAME, NO_PLOTS_ENV_VAR, SPHINX_LOG_ENV_VAR, default_log_dir
 from pttools.docs.references import resolve_alias_reference
 from pttools.docs.typehints import define_type_checking_imports, record_class_typehints
+from pttools.docs.vectorized import add_vectorized_functions
 from pttools.logging import setup_logging
 from pttools.utils.system import IS_READ_THE_DOCS
 
@@ -255,6 +256,8 @@ def setup_sphinx(app: Sphinx) -> None:
     setup_source_lock(app)
     app.connect("config-inited", exclude_lint_dir)
     app.connect("autodoc-process-docstring", add_minigalleries)
+    # Autodoc does not document the vectorized functions as members of their modules.
+    app.connect("autodoc-process-docstring", add_vectorized_functions)
     # The descriptions of the exportable fields are used as the documentation of the corresponding attributes.
     app.connect("builder-inited", add_field_docs)
     app.connect("autodoc-process-docstring", note_field_dependencies)

@@ -247,10 +247,10 @@ def alpha_plus_max_detonation_bag[T: FloatOrArr](v_wall: T) -> T:
     r"""
     Maximum allowed value of $\alpha_+$ for a detonation with wall speed $v_\text{wall}$ in the Bag Model.
 
-    $$\alpha_{+,\max,\text{detonation}} = \frac{ (1 - \sqrt{3} v_\text{wall})^2 }{ 3(1 - v_\text{wall}^2 }$$
+    $$\alpha_{+,\max,\text{detonation}} = \frac{ (1 - \sqrt{3} {v}_\text{wall})^2 }{ 3(1 - {v}_\text{wall}^2) }$$
 
     This comes from inverting
-    $$v_\text{wall} > v_\text{CJ}$$,
+    $$v_\text{wall} > {v}_\text{CJ}$$,
     for $v_\text{CJ}$ of :py:func:`pttools.bubble.v_chapman_jouguet_bag`.
     """
     # Todo: Is this specific to the bag model?
@@ -269,7 +269,7 @@ def alpha_plus_min_hybrid[T: FloatOrArr](v_wall: T) -> T:
 
     Condition from coincidence of wall and shock.
 
-    $$\alpha_{+,\min,\text{hybrid}} = \frac{ (1 - \sqrt{3} v_\text{wall})^2 }{ 9 v_\text{wall}^2 - 1 }$$
+    $$\alpha_{+,\min,\text{hybrid}} = \frac{ (1 - \sqrt{3} {v}_\text{wall})^2 }{ 9 {v}_\text{wall}^2 - 1 }$$
 
     :param v_wall: $v_\text{wall}$
     :return: $\alpha_{+,\min,\text{hybrid}}$
