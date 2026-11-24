@@ -254,9 +254,11 @@ def test_run_latex(tmp_path: Path) -> None:
     pdfs = [paper / "nightly" / f"paper_{date:%Y-%m-%d}.pdf", paper / "nightly" / f"paper_{date:%Y-%m-%d}_2.pdf"]
     assert sorted((paper / "nightly").iterdir()) == pdfs
     assert all(pdf.read_text() == "document\n" for pdf in pdfs)
-    log = next((paper / "logs").glob("nightly_*.log")).read_text()
-    assert "Document build finished." in log
-    assert f"Copied {paper / 'main.pdf'} to {pdfs[0]}." in log
+    # Each run has its own log, and the order of glob is arbitrary.
+    for i, pdf in enumerate(pdfs):
+        log = (paper / "logs" / f"nightly_{date:%Y-%m-%d}{'_2' if i else ''}.log").read_text()
+        assert "Document build finished." in log
+        assert f"Copied {paper / 'main.pdf'} to {pdf}." in log
 
     (paper / "main.tex").write_text("fail\n")
     result = run_script()
